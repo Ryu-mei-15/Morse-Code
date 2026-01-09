@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const translateMorseBtn = document.getElementById('translate-morse-btn');
     const translateTargetSelect = document.getElementById('translate-target-select');
 
+    const showHelpBtn = document.getElementById('show-help-btn');
+    const helpModal = document.getElementById('help-modal');
+    const closeHelpBtn = document.getElementById('close-help-btn');
+    const helpBody = document.getElementById('help-body');
     const showCheatSheetBtn = document.getElementById('show-cheat-sheet-btn');
     const cheatSheetModal = document.getElementById('cheat-sheet-modal');
     const closeCheatSheetBtn = document.getElementById('close-cheat-sheet-btn');
@@ -18,6 +22,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const cheatSheetBody = document.getElementById('cheat-sheet-body');
     const recognitionModeRadios = document.querySelectorAll('input[name="recognition-mode"]');
     const toneControls = document.getElementById('tone-controls');
+    const waveformContainer = document.querySelector('.waveform-container');
+    const waveformCanvas = document.getElementById('waveform-canvas');
+    const waveformCanvasCtx = waveformCanvas.getContext('2d');
     const conversationStatus = document.getElementById('conversation-status');
     const startRecognitionBtn = document.getElementById('start-recognition-btn');
     const stopRecognitionBtn = document.getElementById('stop-recognition-btn');
@@ -27,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const noiseToggle = document.getElementById('noise-cancel-toggle');
     const freqValue = document.getElementById('freq-value');
     const threshValue = document.getElementById('thresh-value');
+    const qValue = document.getElementById('q-value');
     const recognizedMorseEl = document.getElementById('recognized-morse');
     const recognizedTextEl = document.getElementById('recognized-text');
 
@@ -76,7 +84,16 @@ document.addEventListener('DOMContentLoaded', () => {
         'conversation_status_error': { 'ja': 'エラーが発生しました。', 'en': 'An error occurred.', 'de': 'Ein Fehler ist aufgetreten.', 'fr': 'Une erreur est survenue.', 'es': 'Ocurrió un error.', 'pl': 'Wystąpił błąd.', 'tr': 'Bir hata oluştu.', 'ru': 'Произошла ошибка.' },
         'speech_recognition_not_supported': { 'ja': 'お使いのブラウザは会話認識に対応していません。', 'en': 'Your browser does not support speech recognition.', 'de': 'Ihr Browser unterstützt keine Spracherkennung.', 'fr': 'Votre navigateur ne prend pas en charge la reconnaissance vocale.', 'es': 'Su navegador no soporta el reconocimiento de voz.', 'pl': 'Twoja przeglądarka nie obsługuje rozpoznawania mowy.', 'tr': 'Tarayıcınız konuşma tanımayı desteklemiyor.', 'ru': 'Ваш браузер не поддерживает распознавание речи.' },
         'cheat_sheet_btn': { 'ja': '早見表を表示', 'en': 'Show Cheat Sheet', 'de': 'Spickzettel anzeigen', 'fr': 'Afficher l\'antisèche', 'es': 'Mostrar chuleta', 'pl': 'Pokaż ściągawkę', 'tr': 'Kopya Kağıdını Göster', 'ru': 'Показать шпаргалку' },
-        'cheat_sheet_title': { 'ja': 'モールス信号 早見表', 'en': 'Morse Code Cheat Sheet', 'de': 'Morsecode-Spickzettel', 'fr': 'Antisèche Code Morse', 'es': 'Chuleta de Código Morse', 'pl': 'Ściągawka Kodu Morsego', 'tr': 'Mors Kodu Kopya Kağıdı', 'ru': 'Шпаргалка по азбуке Морзе' }
+        'cheat_sheet_title': { 'ja': 'モールス信号 早見表', 'en': 'Morse Code Cheat Sheet', 'de': 'Morsecode-Spickzettel', 'fr': 'Antisèche Code Morse', 'es': 'Chuleta de Código Morse', 'pl': 'Ściągawka Kodu Morsego', 'tr': 'Mors Kodu Kopya Kağıdı', 'ru': 'Шпаргалка по азбуке Морзе' },
+        'help_btn': { 'ja': 'ヘルプとショートカット', 'en': 'Help & Shortcuts', 'de': 'Hilfe & Kurzbefehle', 'fr': 'Aide & Raccourcis', 'es': 'Ayuda y Atajos', 'pl': 'Pomoc i Skróty', 'tr': 'Yardım ve Kısayollar', 'ru': 'Помощь и сочетания клавиш' },
+        'help_title': { 'ja': 'キーボードショートカット', 'en': 'Keyboard Shortcuts', 'de': 'Tastaturkurzbefehle', 'fr': 'Raccourcis Clavier', 'es': 'Atajos de Teclado', 'pl': 'Skróty Klawiaturowe', 'tr': 'Klavye Kısayolları', 'ru': 'Сочетания клавиш' },
+        'shortcut_desc_to_morse': { 'ja': 'テキストをモールス信号に変換', 'en': 'Convert Text to Morse', 'de': 'Text in Morsecode umwandeln', 'fr': 'Convertir Texte en Morse', 'es': 'Convertir Texto a Morse', 'pl': 'Konwertuj Tekst na Kod Morsego', 'tr': 'Metni Mors\'a Çevir', 'ru': 'Преобразовать текст в азбуку Морзе' },
+        'shortcut_desc_to_text': { 'ja': 'モールス信号をテキストに変換', 'en': 'Convert Morse to Text', 'de': 'Morsecode in Text umwandeln', 'fr': 'Convertir Morse en Texte', 'es': 'Convertir Morse a Texto', 'pl': 'Konwertuj Kod Morsego na Tekst', 'tr': 'Mors\'u Metne Çevir', 'ru': 'Преобразовать азбуку Морзе в текст' },
+        'shortcut_desc_play': { 'ja': 'モールス信号を再生', 'en': 'Play Morse Code', 'de': 'Morsecode abspielen', 'fr': 'Jouer le Code Morse', 'es': 'Reproducir Código Morse', 'pl': 'Odtwórz Kod Morsego', 'tr': 'Mors Kodunu Oynat', 'ru': 'Воспроизвести код Морзе' },
+        'shortcut_desc_recognition': { 'ja': '音声認識を開始/停止', 'en': 'Start/Stop Audio Recognition', 'de': 'Audio-Erkennung starten/stoppen', 'fr': 'Démarrer/Arrêter la Reconnaissance Audio', 'es': 'Iniciar/Detener Reconocimiento de Audio', 'pl': 'Start/Stop Rozpoznawania Audio', 'tr': 'Ses Tanımayı Başlat/Durdur', 'ru': 'Запустить/остановить распознавание звука' },
+        'shortcut_desc_cheatsheet': { 'ja': '早見表の表示/非表示', 'en': 'Toggle Cheat Sheet', 'de': 'Spickzettel ein-/ausblenden', 'fr': 'Afficher/Masquer l\'Antisèche', 'es': 'Mostrar/Ocultar Chuleta', 'pl': 'Pokaż/Ukryj Ściągawkę', 'tr': 'Kopya Kağıdını Göster/Gizle', 'ru': 'Показать/скрыть шпаргалку' },
+        'shortcut_desc_help': { 'ja': 'このヘルプの表示/非表示', 'en': 'Toggle this Help', 'de': 'Diese Hilfe ein-/ausblenden', 'fr': 'Afficher/Masquer cette Aide', 'es': 'Mostrar/Ocultar esta Ayuda', 'pl': 'Pokaż/Ukryj tę Pomoc', 'tr': 'Bu Yardımı Göster/Gizle', 'ru': 'Показать/скрыть эту справку' },
+        'shortcut_desc_close_modal': { 'ja': 'モーダルを閉じる / 認識を停止', 'en': 'Close Modal / Stop Recognition', 'de': 'Modal schließen / Erkennung stoppen', 'fr': 'Fermer la Modale / Arrêter la Reconnaissance', 'es': 'Cerrar Modal / Detener Reconocimiento', 'pl': 'Zamknij Modal / Zatrzymaj Rozpoznawanie', 'tr': 'Modalı Kapat / Tanımayı Durdur', 'ru': 'Закрыть модальное окно / Остановить распознавание' }
     };
 
     function switchLanguage(lang) {
@@ -112,6 +129,42 @@ document.addEventListener('DOMContentLoaded', () => {
         setTheme(prefersDark);
     }
 
+    // --- 波形描画 ---
+    function drawWaveform(dataArray) {
+        if (!isRecognitionActive) return;
+
+        const width = waveformCanvas.width;
+        const height = waveformCanvas.height;
+        const bufferLength = dataArray.length;
+
+        const themeBgColor = getComputedStyle(waveformContainer).backgroundColor;
+        const themeLineColor = getComputedStyle(document.documentElement).getPropertyValue('--primary-color');
+
+        waveformCanvasCtx.fillStyle = themeBgColor;
+        waveformCanvasCtx.fillRect(0, 0, width, height);
+
+        waveformCanvasCtx.lineWidth = 2;
+        waveformCanvasCtx.strokeStyle = themeLineColor;
+        waveformCanvasCtx.beginPath();
+
+        const sliceWidth = width * 1.0 / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+            const v = dataArray[i] / 128.0; // data is 0-255, normalize to 0-2
+            const y = v * height / 2;
+
+            if (i === 0) {
+                waveformCanvasCtx.moveTo(x, y);
+            } else {
+                waveformCanvasCtx.lineTo(x, y);
+            }
+            x += sliceWidth;
+        }
+        waveformCanvasCtx.lineTo(width, height / 2);
+        waveformCanvasCtx.stroke();
+    }
+
     // --- Web Speech APIの準備 ---
     let speechRecognition = null;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -127,6 +180,21 @@ document.addEventListener('DOMContentLoaded', () => {
             toneControls.style.display = (radio.value === 'tone') ? 'grid' : 'none';
         });
     });
+
+    // --- Modal Handling ---
+    function openModal(modal) {
+        // 他のモーダルが開いていれば閉じる
+        if (cheatSheetModal.style.display === 'flex') closeModal(cheatSheetModal);
+        if (helpModal.style.display === 'flex') closeModal(helpModal);
+
+        modal.style.display = 'flex';
+        setTimeout(() => modal.classList.add('visible'), 10);
+    }
+
+    function closeModal(modal) {
+        modal.classList.remove('visible');
+        setTimeout(() => { modal.style.display = 'none'; }, 300);
+    }
 
     // --- 早見表モーダル ---
     function generateCheatSheet(lang) {
@@ -152,20 +220,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     showCheatSheetBtn.addEventListener('click', () => {
-        generateCheatSheet(langSelect.value);
-        cheatSheetModal.style.display = 'flex';
-        setTimeout(() => cheatSheetModal.classList.add('visible'), 10);
+        if (cheatSheetModal.style.display === 'flex') {
+            closeModal(cheatSheetModal);
+        } else {
+            generateCheatSheet(langSelect.value);
+            openModal(cheatSheetModal);
+        }
     });
 
-    function closeModal() {
-        cheatSheetModal.classList.remove('visible');
-        setTimeout(() => { cheatSheetModal.style.display = 'none'; }, 300);
+    closeCheatSheetBtn.addEventListener('click', () => closeModal(cheatSheetModal));
+    cheatSheetModal.addEventListener('click', (e) => {
+        if (e.target === cheatSheetModal) closeModal(cheatSheetModal);
+    });
+
+    // --- ヘルプモーダル ---
+    function generateHelp() {
+        const uiLang = uiLangSelect.value;
+        const shortcuts = [
+            { keys: ['Alt', 'M'], descKey: 'shortcut_desc_to_morse' },
+            { keys: ['Alt', 'T'], descKey: 'shortcut_desc_to_text' },
+            { keys: ['Alt', 'P'], descKey: 'shortcut_desc_play' },
+            { keys: ['Alt', 'R'], descKey: 'shortcut_desc_recognition' },
+            { keys: ['Alt', '?'], descKey: 'shortcut_desc_cheatsheet' },
+            { keys: ['Alt', 'I'], descKey: 'shortcut_desc_help' },
+            { keys: ['Esc'], descKey: 'shortcut_desc_close_modal' },
+        ];
+
+        helpBody.innerHTML = shortcuts.map(sc => {
+            const keyHTML = sc.keys.map(key => `<kbd>${key}</kbd>`).join(' + ');
+            const desc = UI_TEXTS[sc.descKey][uiLang] || UI_TEXTS[sc.descKey]['en'];
+            return `<div>${keyHTML}</div><div>${desc}</div>`;
+        }).join('');
     }
 
-    closeCheatSheetBtn.addEventListener('click', closeModal);
-    cheatSheetModal.addEventListener('click', (e) => {
-        if (e.target === cheatSheetModal) closeModal();
+    showHelpBtn.addEventListener('click', () => {
+        generateHelp();
+        openModal(helpModal);
     });
+    closeHelpBtn.addEventListener('click', () => closeModal(helpModal));
+    helpModal.addEventListener('click', (e) => { if (e.target === helpModal) closeModal(helpModal); });
 
     // --- イベントリスナー設定 ---
 
@@ -288,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
             qValue: parseInt(qFactorSlider.value, 10),
             noiseCancel: noiseToggle.checked,
             micErrorMsg: UI_TEXTS['alert_mic_denied'][uiLang],
+            onWaveformUpdate: drawWaveform,
             onRecognize: (morse) => { // このコールバックは認識が進むたびに呼ばれる
                 recognizedMorseEl.textContent = morse;
                 const lang = langSelect.value;
@@ -346,11 +440,16 @@ document.addEventListener('DOMContentLoaded', () => {
         stopRecognitionBtn.disabled = false;
         recognizedMorseEl.textContent = '';
         recognizedTextEl.textContent = '';
-        conversationStatus.style.display = (selectedMode === 'conversation') ? 'block' : 'none';
 
         if (selectedMode === 'tone') {
+            waveformContainer.style.display = 'block';
+            // Resize canvas to its display size for crisp rendering
+            const rect = waveformCanvas.getBoundingClientRect();
+            waveformCanvas.width = rect.width;
+            waveformCanvas.height = rect.height;
             startToneRecognition();
         } else {
+            conversationStatus.style.display = 'block';
             startConversationRecognition();
         }
     });
@@ -369,6 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
         stopRecognitionBtn.disabled = true;
         conversationStatus.textContent = '';
         conversationStatus.style.display = 'none';
+        waveformContainer.style.display = 'none';
     });
 
     // 設定スライダーの値表示を更新
@@ -377,6 +477,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     threshSlider.addEventListener('input', () => {
         threshValue.textContent = threshSlider.value;
+    });
+    qFactorSlider.addEventListener('input', () => {
+        qValue.textContent = qFactorSlider.value;
     });
     qFactorSlider.addEventListener('input', () => {
         qValue.textContent = qFactorSlider.value;

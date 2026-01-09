@@ -90,8 +90,13 @@ class AudioHandler {
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 2048; // FFTサイズ
 
-            const bufferLength = this.analyser.frequencyBinCount;
-            const dataArray = new Float32Array(bufferLength);
+            // For tone detection
+            const frequencyBufferLength = this.analyser.frequencyBinCount;
+            const frequencyDataArray = new Float32Array(frequencyBufferLength);
+            
+            // For waveform visualization
+            const timeDomainBufferLength = this.analyser.fftSize;
+            const timeDomainDataArray = new Uint8Array(timeDomainBufferLength);
             
             // マイク -> フィルター -> アナライザー の順に接続
             this.microphone.connect(this.filterNode);
@@ -100,7 +105,7 @@ class AudioHandler {
 
             // 簡易ノイズキャンセル: 最初の0.5秒の平均音量をノイズレベルとする
             if (config.noiseCancel) {
-                this.noiseLevel = await this._measureNoiseLevel(dataArray);
+                this.noiseLevel = await this._measureNoiseLevel(frequencyDataArray);
             } else {
                 this.noiseLevel = -100.0;
             }
@@ -115,8 +120,8 @@ class AudioHandler {
             const processAudio = () => {
                 if (!this.isRecognizing) return;
 
-                this.analyser.getFloatFrequencyData(dataArray);
-                const volume = dataArray[targetBin];
+                this.analyser.getFloatFrequencyData(frequencyDataArray);
+                const volume = frequencyDataArray[targetBin];
                 const threshold = config.threshold + (config.noiseCancel ? Math.max(0, this.noiseLevel + 20) : 0);
 
                 if (volume > threshold) { // 音を検知
@@ -144,6 +149,12 @@ class AudioHandler {
                         config.onRecognize(recognizedSymbols.join(''));
                         silenceStartTime = this.audioContext.currentTime;
                     }
+                }
+
+                // For waveform visualization
+                this.analyser.getByteTimeDomainData(timeDomainDataArray);
+                if (config.onWaveformUpdate) {
+                    config.onWaveformUpdate(timeDomainDataArray);
                 }
                 requestAnimationFrame(processAudio);
             };
