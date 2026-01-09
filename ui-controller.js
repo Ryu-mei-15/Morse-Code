@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const morseInput = document.getElementById('morse-input');
     const uiLangSelect = document.getElementById('ui-language-select');
     const langSelect = document.getElementById('language-select');
+    const themeToggle = document.getElementById('theme-toggle');
     const toMorseBtn = document.getElementById('to-morse-btn');
     const toTextBtn = document.getElementById('to-text-btn');
     const playMorseBtn = document.getElementById('play-morse-btn');
@@ -10,6 +11,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const translateMorseBtn = document.getElementById('translate-morse-btn');
     const translateTargetSelect = document.getElementById('translate-target-select');
 
+    const recognitionModeRadios = document.querySelectorAll('input[name="recognition-mode"]');
+    const toneControls = document.getElementById('tone-controls');
+    const conversationStatus = document.getElementById('conversation-status');
     const startRecognitionBtn = document.getElementById('start-recognition-btn');
     const stopRecognitionBtn = document.getElementById('stop-recognition-btn');
     const freqSlider = document.getElementById('frequency-slider');
@@ -21,6 +25,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const recognizedTextEl = document.getElementById('recognized-text');
 
     const audioHandler = new AudioHandler();
+    let isRecognitionActive = false;
 
     const UI_TEXTS = {
         'app_title': { 'ja': 'モールス信号チャット', 'en': 'Morse Code Chat', 'de': 'Morsecode-Chat', 'fr': 'Chat en Code Morse', 'es': 'Chat de Código Morse', 'pl': 'Czat z Kodem Morsego', 'tr': 'Mors Kodu Sohbeti', 'ru': 'Чат на азбуке Морзе' },
@@ -46,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'section_header_recognition': { 'ja': '音声認識', 'en': 'Audio Recognition', 'de': 'Audio-Erkennung', 'fr': 'Reconnaissance Audio', 'es': 'Reconocimiento de Audio', 'pl': 'Rozpoznawanie Audio', 'tr': 'Ses Tanıma', 'ru': 'Распознавание звука' },
         'label_frequency': { 'ja': '認識周波数 (Hz):', 'en': 'Recognition Frequency (Hz):', 'de': 'Erkennungsfrequenz (Hz):', 'fr': 'Fréquence de Reconnaissance (Hz):', 'es': 'Frecuencia de Reconocimiento (Hz):', 'pl': 'Częstotliwość Rozpoznawania (Hz):', 'tr': 'Tanıma Frekansı (Hz):', 'ru': 'Частота распознавания (Гц):' },
         'label_threshold': { 'ja': '音量閾値:', 'en': 'Volume Threshold:', 'de': 'Lautstärkeschwelle:', 'fr': 'Seuil de Volume:', 'es': 'Umbral de Volumen:', 'pl': 'Próg Głośności:', 'tr': 'Ses Seviyesi Eşiği:', 'ru': 'Порог громкости:' },
+        'label_q_factor': { 'ja': 'フィルター性能:', 'en': 'Filter Sharpness:', 'de': 'Filter-Schärfe:', 'fr': 'Netteté du Filtre:', 'es': 'Nitidez del Filtro:', 'pl': 'Ostrość Filtra:', 'tr': 'Filtre Keskinliği:', 'ru': 'Резкость фильтра:' },
         'label_noise_cancel': { 'ja': 'ノイズキャンセル (簡易):', 'en': 'Noise Cancellation (Simple):', 'de': 'Rauschunterdrückung (Einfach):', 'fr': 'Annulation du Bruit (Simple):', 'es': 'Cancelación de Ruido (Simple):', 'pl': 'Redukcja Szumów (Prosta):', 'tr': 'Gürültü Engelleme (Basit):', 'ru': 'Шумоподавление (простое):' },
         'start_recognition_btn': { 'ja': '音声認識を開始', 'en': 'Start Recognition', 'de': 'Erkennung starten', 'fr': 'Démarrer la Reconnaissance', 'es': 'Iniciar Reconocimiento', 'pl': 'Rozpocznij Rozpoznawanie', 'tr': 'Tanımayı Başlat', 'ru': 'Начать распознавание' },
         'stop_recognition_btn': { 'ja': '停止', 'en': 'Stop', 'de': 'Stopp', 'fr': 'Arrêter', 'es': 'Detener', 'pl': 'Zatrzymaj', 'tr': 'Durdur', 'ru': 'Стоп' },
@@ -57,7 +63,12 @@ document.addEventListener('DOMContentLoaded', () => {
         'alert_translation_error': { 'ja': '翻訳中にエラーが発生しました:', 'en': 'An error occurred during translation:', 'de': 'Ein Fehler ist bei der Übersetzung aufgetreten:', 'fr': 'Une erreur est survenue lors de la traduction:', 'es': 'Ocurrió un error durante la traducción:', 'pl': 'Wystąpił błąd podczas tłumaczenia:', 'tr': 'Çeviri sırasında bir hata oluştu:', 'ru': 'Произошла ошибка во время перевода:' },
         'alert_translation_failed': { 'ja': '翻訳に失敗しました。', 'en': 'Translation failed.', 'de': 'Übersetzung fehlgeschlagen.', 'fr': 'La traduction a échoué.', 'es': 'La traducción falló.', 'pl': 'Tłumaczenie nie powiodło się.', 'tr': 'Çeviri başarısız oldu.', 'ru': 'Перевод не удался.' },
         'alert_mic_denied': { 'ja': 'マイクへのアクセスを許可してください。', 'en': 'Please allow access to the microphone.', 'de': 'Bitte erlauben Sie den Zugriff auf das Mikrofon.', 'fr': 'Veuillez autoriser l\'accès au microphone.', 'es': 'Por favor, permita el acceso al micrófono.', 'pl': 'Proszę zezwolić na dostęp do mikrofonu.', 'tr': 'Lütfen mikrofona erişim izni verin.', 'ru': 'Пожалуйста, разрешите доступ к микрофону.' },
-        'alert_empty_morse_translate': { 'ja': '翻訳するモールス信号を入力してください。', 'en': 'Please enter Morse code to translate.', 'de': 'Bitte geben Sie Morsecode zum Übersetzen ein.', 'fr': 'Veuillez entrer le code Morse à traduire.', 'es': 'Por favor, introduzca el código Morse para traducir.', 'pl': 'Proszę wprowadzić kod Morsego do przetłumaczenia.', 'tr': 'Lütfen çevrilecek Mors kodunu girin.', 'ru': 'Пожалуйста, введите код Морзе для перевода.' }
+        'alert_empty_morse_translate': { 'ja': '翻訳するモールス信号を入力してください。', 'en': 'Please enter Morse code to translate.', 'de': 'Bitte geben Sie Morsecode zum Übersetzen ein.', 'fr': 'Veuillez entrer le code Morse à traduire.', 'es': 'Por favor, introduzca el código Morse para traducir.', 'pl': 'Proszę wprowadzić kod Morsego do przetłumaczenia.', 'tr': 'Lütfen çevrilecek Mors kodunu girin.', 'ru': 'Пожалуйста, введите код Морзе для перевода.' },
+        'recognition_mode_tone': { 'ja': 'トーン入力', 'en': 'Tone Input', 'de': 'Toneingabe', 'fr': 'Entrée Tonale', 'es': 'Entrada de Tono', 'pl': 'Wejście Tonowe', 'tr': 'Ton Girişi', 'ru': 'Тоновый ввод' },
+        'recognition_mode_conversation': { 'ja': '会話入力', 'en': 'Conversation', 'de': 'Gespräch', 'fr': 'Conversation', 'es': 'Conversación', 'pl': 'Rozmowa', 'tr': 'Konuşma', 'ru': 'Разговор' },
+        'conversation_status_listening': { 'ja': '聞き取り中...', 'en': 'Listening...', 'de': 'Höre zu...', 'fr': 'Écoute en cours...', 'es': 'Escuchando...', 'pl': 'Słucham...', 'tr': 'Dinleniyor...', 'ru': 'Слушаю...' },
+        'conversation_status_error': { 'ja': 'エラーが発生しました。', 'en': 'An error occurred.', 'de': 'Ein Fehler ist aufgetreten.', 'fr': 'Une erreur est survenue.', 'es': 'Ocurrió un error.', 'pl': 'Wystąpił błąd.', 'tr': 'Bir hata oluştu.', 'ru': 'Произошла ошибка.' },
+        'speech_recognition_not_supported': { 'ja': 'お使いのブラウザは会話認識に対応していません。', 'en': 'Your browser does not support speech recognition.', 'de': 'Ihr Browser unterstützt keine Spracherkennung.', 'fr': 'Votre navigateur ne prend pas en charge la reconnaissance vocale.', 'es': 'Su navegador no soporta el reconocimiento de voz.', 'pl': 'Twoja przeglądarka nie obsługuje rozpoznawania mowy.', 'tr': 'Tarayıcınız konuşma tanımayı desteklemiyor.', 'ru': 'Ваш браузер не поддерживает распознавание речи.' }
     };
 
     function switchLanguage(lang) {
@@ -71,6 +82,43 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- テーマ切り替え ---
+    function setTheme(isDark) {
+        document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        themeToggle.checked = isDark;
+    }
+
+    themeToggle.addEventListener('change', () => {
+        setTheme(themeToggle.checked);
+    });
+
+    // 保存されたテーマ設定を確認、なければOSの設定に従う
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (savedTheme) {
+        setTheme(savedTheme === 'dark');
+    } else {
+        setTheme(prefersDark);
+    }
+
+    // --- Web Speech APIの準備 ---
+    let speechRecognition = null;
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (SpeechRecognition) {
+        speechRecognition = new SpeechRecognition();
+        speechRecognition.continuous = false; // 1回の発話で停止
+        speechRecognition.interimResults = false; // 最終結果のみ取得
+    }
+
+    recognitionModeRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            if (isRecognitionActive) stopRecognitionBtn.click();
+            toneControls.style.display = (radio.value === 'tone') ? 'grid' : 'none';
+        });
+    });
 
     // --- イベントリスナー設定 ---
 
@@ -185,35 +233,95 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 音声認識開始
-    startRecognitionBtn.addEventListener('click', () => {
+    function startToneRecognition() {
         const uiLang = uiLangSelect.value;
         const config = {
             frequency: parseInt(freqSlider.value, 10),
             threshold: parseInt(threshSlider.value, 10),
+            qValue: parseInt(qFactorSlider.value, 10),
             noiseCancel: noiseToggle.checked,
             micErrorMsg: UI_TEXTS['alert_mic_denied'][uiLang],
-            onRecognize: (morse) => {
+            onRecognize: (morse) => { // このコールバックは認識が進むたびに呼ばれる
                 recognizedMorseEl.textContent = morse;
                 const lang = langSelect.value;
-                // 認識途中の不完全なコードは変換しないようにする
+                // 認識途中の不完全なコード（末尾の区切り文字）は変換しない
                 const cleanedMorse = morse.replace(/(\/| )$/, '');
                 recognizedTextEl.textContent = morseToText(cleanedMorse, lang);
             }
         };
         audioHandler.startAudioRecognition(config);
-        
-        // UIの状態更新
+    }
+
+    function startConversationRecognition() {
+        const uiLang = uiLangSelect.value;
+        if (!speechRecognition) {
+            alert(UI_TEXTS['speech_recognition_not_supported'][uiLang]);
+            stopRecognitionBtn.click(); // 状態をリセット
+            return;
+        }
+
+        const morseLang = langSelect.value;
+        const langMap = { 'ja': 'ja-JP', 'en': 'en-US', 'de': 'de-DE', 'fr': 'fr-FR', 'es': 'es-ES', 'pl': 'pl-PL', 'tr': 'tr-TR', 'ru': 'ru-RU' };
+        speechRecognition.lang = langMap[morseLang] || 'en-US';
+
+        speechRecognition.onstart = () => {
+            conversationStatus.textContent = UI_TEXTS['conversation_status_listening'][uiLang];
+        };
+
+        speechRecognition.onerror = (event) => {
+            console.error('Speech recognition error:', event.error);
+            conversationStatus.textContent = `${UI_TEXTS['conversation_status_error'][uiLang]} (${event.error})`;
+        };
+
+        speechRecognition.onend = () => {
+            // ユーザーが停止ボタンを押していなければ、自動的に再開
+            if (isRecognitionActive) {
+                speechRecognition.start();
+            }
+        };
+
+        speechRecognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            textInput.value = (textInput.value + ' ' + transcript).trim();
+            morseInput.value = textToMorse(textInput.value, morseLang);
+        };
+
+        speechRecognition.start();
+    }
+
+    startRecognitionBtn.addEventListener('click', () => {
+        if (isRecognitionActive) return;
+        isRecognitionActive = true;
+
+        const selectedMode = document.querySelector('input[name="recognition-mode"]:checked').value;
+
         startRecognitionBtn.disabled = true;
         stopRecognitionBtn.disabled = false;
         recognizedMorseEl.textContent = '';
         recognizedTextEl.textContent = '';
+        conversationStatus.style.display = (selectedMode === 'conversation') ? 'block' : 'none';
+
+        if (selectedMode === 'tone') {
+            startToneRecognition();
+        } else {
+            startConversationRecognition();
+        }
     });
 
     // 音声認識停止
     stopRecognitionBtn.addEventListener('click', () => {
+        if (!isRecognitionActive) return;
+        isRecognitionActive = false;
+
         audioHandler.stopAudioRecognition();
+        if (speechRecognition) {
+            speechRecognition.stop();
+        }
+
         startRecognitionBtn.disabled = false;
         stopRecognitionBtn.disabled = true;
+        conversationStatus.textContent = '';
+        conversationStatus.style.display = 'none';
     });
 
     // 設定スライダーの値表示を更新
@@ -222,6 +330,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     threshSlider.addEventListener('input', () => {
         threshValue.textContent = threshSlider.value;
+    });
+    qFactorSlider.addEventListener('input', () => {
+        qValue.textContent = qFactorSlider.value;
     });
 
     // 翻訳先ドロップダウンを初期化
@@ -236,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // UIの初期言語を設定
     const supportedLangs = Object.keys(UI_TEXTS['lang_ja']);
     let initialUiLang = navigator.language.split('-')[0];
-    if (!supportedLangs.includes(initialUiLang)) {
+    if (!supportedLangs.includes(initialUiLang)) { // サポート外の言語の場合は日本語をデフォルトに
         initialUiLang = 'ja'; // サポート外の言語の場合は日本語をデフォルトに
     }
     uiLangSelect.value = initialUiLang;

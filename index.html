@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Morse Code Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <h1 data-lang-key="app_title">モールス信号チャット</h1>
 
     <div class="settings-container">
+        <div class="theme-switcher">
+            <input type="checkbox" id="theme-toggle">
+            <label for="theme-toggle" class="toggle-label" aria-label="Toggle theme"></label>
+        </div>
         <label for="ui-language-select" data-lang-key="label_ui_language">UI言語:</label>
         <select id="ui-language-select">
             <option value="ja">日本語</option>
@@ -60,14 +67,23 @@
         <!-- 音声認識エリア -->
         <div class="section">
             <h2 data-lang-key="section_header_recognition">音声認識</h2>
-            <div class="controls">
+            <div class="recognition-mode-selector">
+                <label><input type="radio" name="recognition-mode" value="tone" checked> <span data-lang-key="recognition_mode_tone">トーン入力</span></label>
+                <label><input type="radio" name="recognition-mode" value="conversation"> <span data-lang-key="recognition_mode_conversation">会話入力</span></label>
+            </div>
+            <div id="conversation-status" class="status-indicator"></div>
+
+            <div class="controls" id="tone-controls">
                 <label for="frequency-slider"><span data-lang-key="label_frequency">認識周波数 (Hz):</span> <span id="freq-value">800</span></label>
                 <input type="range" id="frequency-slider" min="200" max="2000" value="800">
 
                 <label for="threshold-slider"><span data-lang-key="label_threshold">音量閾値:</span> <span id="thresh-value">-50</span></label>
                 <input type="range" id="threshold-slider" min="-100" max="0" value="-50">
 
-                <label for="noise-cancel-toggle" data-lang-key="label_noise_cancel">ノイズキャンセル (簡易):</label>
+                <label for="q-factor-slider"><span data-lang-key="label_q_factor">フィルター性能:</span> <span id="q-value">20</span></label>
+                <input type="range" id="q-factor-slider" min="1" max="50" value="20">
+
+                <label for="noise-cancel-toggle"><span data-lang-key="label_noise_cancel">ノイズキャンセル (簡易):</span></label>
                 <input type="checkbox" id="noise-cancel-toggle" checked>
             </div>
             <button id="start-recognition-btn" data-lang-key="start_recognition_btn">音声認識を開始</button>

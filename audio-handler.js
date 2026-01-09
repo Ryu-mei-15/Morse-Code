@@ -5,6 +5,7 @@ class AudioHandler {
         this.gainNode = null;
         this.analyser = null;
         this.microphone = null;
+        this.filterNode = null;
         this.scriptProcessor = null;
         this.isRecognizing = false;
         this.noiseLevel = -100.0; // dB
@@ -79,13 +80,22 @@ class AudioHandler {
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             this.microphone = this.audioContext.createMediaStreamSource(stream);
+
+            // ノイズリダクションのためのバンドパスフィルターをセットアップ
+            this.filterNode = this.audioContext.createBiquadFilter();
+            this.filterNode.type = 'bandpass';
+            this.filterNode.frequency.value = config.frequency;
+            this.filterNode.Q.value = config.qValue; // Q値が高いほどフィルターがシャープになる
+
             this.analyser = this.audioContext.createAnalyser();
             this.analyser.fftSize = 2048; // FFTサイズ
 
             const bufferLength = this.analyser.frequencyBinCount;
             const dataArray = new Float32Array(bufferLength);
             
-            this.microphone.connect(this.analyser);
+            // マイク -> フィルター -> アナライザー の順に接続
+            this.microphone.connect(this.filterNode);
+            this.filterNode.connect(this.analyser);
             this.isRecognizing = true;
 
             // 簡易ノイズキャンセル: 最初の0.5秒の平均音量をノイズレベルとする
@@ -175,6 +185,10 @@ class AudioHandler {
             this.microphone.mediaStream.getTracks().forEach(track => track.stop());
             this.microphone.disconnect();
             this.microphone = null;
+        }
+        if (this.filterNode) {
+            this.filterNode.disconnect();
+            this.filterNode = null;
         }
         if (this.analyser) {
             this.analyser.disconnect();
