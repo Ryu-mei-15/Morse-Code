@@ -11,6 +11,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const translateMorseBtn = document.getElementById('translate-morse-btn');
     const translateTargetSelect = document.getElementById('translate-target-select');
 
+    const showCheatSheetBtn = document.getElementById('show-cheat-sheet-btn');
+    const cheatSheetModal = document.getElementById('cheat-sheet-modal');
+    const closeCheatSheetBtn = document.getElementById('close-cheat-sheet-btn');
+    const cheatSheetTitle = document.getElementById('cheat-sheet-title');
+    const cheatSheetBody = document.getElementById('cheat-sheet-body');
     const recognitionModeRadios = document.querySelectorAll('input[name="recognition-mode"]');
     const toneControls = document.getElementById('tone-controls');
     const conversationStatus = document.getElementById('conversation-status');
@@ -18,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const stopRecognitionBtn = document.getElementById('stop-recognition-btn');
     const freqSlider = document.getElementById('frequency-slider');
     const threshSlider = document.getElementById('threshold-slider');
+    const qFactorSlider = document.getElementById('q-factor-slider');
     const noiseToggle = document.getElementById('noise-cancel-toggle');
     const freqValue = document.getElementById('freq-value');
     const threshValue = document.getElementById('thresh-value');
@@ -68,7 +74,9 @@ document.addEventListener('DOMContentLoaded', () => {
         'recognition_mode_conversation': { 'ja': '会話入力', 'en': 'Conversation', 'de': 'Gespräch', 'fr': 'Conversation', 'es': 'Conversación', 'pl': 'Rozmowa', 'tr': 'Konuşma', 'ru': 'Разговор' },
         'conversation_status_listening': { 'ja': '聞き取り中...', 'en': 'Listening...', 'de': 'Höre zu...', 'fr': 'Écoute en cours...', 'es': 'Escuchando...', 'pl': 'Słucham...', 'tr': 'Dinleniyor...', 'ru': 'Слушаю...' },
         'conversation_status_error': { 'ja': 'エラーが発生しました。', 'en': 'An error occurred.', 'de': 'Ein Fehler ist aufgetreten.', 'fr': 'Une erreur est survenue.', 'es': 'Ocurrió un error.', 'pl': 'Wystąpił błąd.', 'tr': 'Bir hata oluştu.', 'ru': 'Произошла ошибка.' },
-        'speech_recognition_not_supported': { 'ja': 'お使いのブラウザは会話認識に対応していません。', 'en': 'Your browser does not support speech recognition.', 'de': 'Ihr Browser unterstützt keine Spracherkennung.', 'fr': 'Votre navigateur ne prend pas en charge la reconnaissance vocale.', 'es': 'Su navegador no soporta el reconocimiento de voz.', 'pl': 'Twoja przeglądarka nie obsługuje rozpoznawania mowy.', 'tr': 'Tarayıcınız konuşma tanımayı desteklemiyor.', 'ru': 'Ваш браузер не поддерживает распознавание речи.' }
+        'speech_recognition_not_supported': { 'ja': 'お使いのブラウザは会話認識に対応していません。', 'en': 'Your browser does not support speech recognition.', 'de': 'Ihr Browser unterstützt keine Spracherkennung.', 'fr': 'Votre navigateur ne prend pas en charge la reconnaissance vocale.', 'es': 'Su navegador no soporta el reconocimiento de voz.', 'pl': 'Twoja przeglądarka nie obsługuje rozpoznawania mowy.', 'tr': 'Tarayıcınız konuşma tanımayı desteklemiyor.', 'ru': 'Ваш браузер не поддерживает распознавание речи.' },
+        'cheat_sheet_btn': { 'ja': '早見表を表示', 'en': 'Show Cheat Sheet', 'de': 'Spickzettel anzeigen', 'fr': 'Afficher l\'antisèche', 'es': 'Mostrar chuleta', 'pl': 'Pokaż ściągawkę', 'tr': 'Kopya Kağıdını Göster', 'ru': 'Показать шпаргалку' },
+        'cheat_sheet_title': { 'ja': 'モールス信号 早見表', 'en': 'Morse Code Cheat Sheet', 'de': 'Morsecode-Spickzettel', 'fr': 'Antisèche Code Morse', 'es': 'Chuleta de Código Morse', 'pl': 'Ściągawka Kodu Morsego', 'tr': 'Mors Kodu Kopya Kağıdı', 'ru': 'Шпаргалка по азбуке Морзе' }
     };
 
     function switchLanguage(lang) {
@@ -118,6 +126,45 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isRecognitionActive) stopRecognitionBtn.click();
             toneControls.style.display = (radio.value === 'tone') ? 'grid' : 'none';
         });
+    });
+
+    // --- 早見表モーダル ---
+    function generateCheatSheet(lang) {
+        const codeMap = MORSE_CODE[lang];
+        if (!codeMap) {
+            cheatSheetBody.innerHTML = 'No data available.';
+            return;
+        }
+
+        const langName = langSelect.querySelector(`option[value="${lang}"]`).textContent;
+        const uiLang = uiLangSelect.value;
+        const baseTitle = UI_TEXTS['cheat_sheet_title'][uiLang] || 'Morse Code Cheat Sheet';
+        cheatSheetTitle.textContent = `${baseTitle} (${langName})`;
+
+        const sortedKeys = Object.keys(codeMap).sort((a, b) => a.localeCompare(b, lang));
+
+        cheatSheetBody.innerHTML = sortedKeys.map(char => `
+            <div class="cheat-sheet-item">
+                <span class="cheat-sheet-char">${char}</span>
+                <span class="cheat-sheet-code">${codeMap[char]}</span>
+            </div>
+        `).join('');
+    }
+
+    showCheatSheetBtn.addEventListener('click', () => {
+        generateCheatSheet(langSelect.value);
+        cheatSheetModal.style.display = 'flex';
+        setTimeout(() => cheatSheetModal.classList.add('visible'), 10);
+    });
+
+    function closeModal() {
+        cheatSheetModal.classList.remove('visible');
+        setTimeout(() => { cheatSheetModal.style.display = 'none'; }, 300);
+    }
+
+    closeCheatSheetBtn.addEventListener('click', closeModal);
+    cheatSheetModal.addEventListener('click', (e) => {
+        if (e.target === cheatSheetModal) closeModal();
     });
 
     // --- イベントリスナー設定 ---
@@ -357,5 +404,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // UI言語が変更されたら、表示を切り替える
     uiLangSelect.addEventListener('change', (e) => {
         switchLanguage(e.target.value);
+    });
+
+    // モールス言語が変更されたら、表示中の早見表を更新
+    langSelect.addEventListener('change', (e) => {
+        if (cheatSheetModal.style.display === 'flex') {
+            generateCheatSheet(e.target.value);
+        }
     });
 });
