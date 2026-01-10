@@ -45,6 +45,7 @@ The project is divided into the following files based on functionality:
 ├── morse-code.js       # Morse code conversion logic for each language
 ├── audio-handler.js    # Web Audio API handling (playback, recognition, etc.)
 └── ui-controller.js    # UI event handling and module coordination
+```
 
 
 
