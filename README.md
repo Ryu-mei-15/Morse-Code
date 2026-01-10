@@ -1,3 +1,55 @@
+# Morse Code Chat
+
+A multifunctional Morse code transmission, reception, and translation application that runs directly in your browser.
+
+## ✨ Key Features
+
+This web application offers versatile features for Morse code learners, enthusiasts, and anyone interested in languages.
+
+- **Multilingual Morse Code Support**:
+  - Supports bidirectional conversion between text and Morse code for the following languages:
+    - Japanese (Wabun), English, German, French, Spanish, Polish, Turkish, Russian (Cyrillic).
+
+- **Versatile Input and Conversion**:
+  - **Text ⇔ Morse Code**: Convert input text to Morse code and vice versa.
+  - **Voice Recognition**: Real-time conversion of vocalized sounds (like dots and dashes) into Morse code and text via microphone input.
+    - **Customizable Recognition Settings**: Adjust frequency detection and volume thresholds freely using sliders.
+    - **Simple Noise Cancellation**: Includes a feature to measure ambient noise levels to improve recognition accuracy.
+  - **Audio Playback**: Play back the Morse code in the text area using beeps at a specified frequency.
+
+- **Integrated Translation Functionality**:
+  - **Text Translation**: Translate input text into other supported languages.
+  - **Morse Code Translation**: Perform a two-step translation (Morse Code → Text → Target Language) with a single button click.
+  - (Translation uses the external [MyMemory API](https://mymemory.translated.net/).)
+
+- **Internationalized UI**:
+  - The application's display language (UI language) and the target Morse code language can be set independently.
+  - The UI supports multiple languages, including Japanese, English, and German.
+
+## 🛠️ Technology Stack
+
+- HTML5
+- CSS3
+- JavaScript (ES6+)
+  - **Web Audio API**: Used for Morse code audio playback, microphone input analysis, and voice recognition.
+  - **Fetch API**: Used for asynchronous communication with external translation APIs.
+
+## 📁 File Structure
+
+The project is divided into the following files based on functionality:
+
+```text
+.
+├── index.html          # The skeleton UI of the application
+├── style.css           # Application stylesheet
+├── morse-code.js       # Morse code conversion logic for each language
+├── audio-handler.js    # Web Audio API handling (playback, recognition, etc.)
+└── ui-controller.js    # UI event handling and module coordination
+
+
+
+
+
 # モールス信号チャット (Morse Code Chat)
 
 ブラウザ上で動作する、多機能なモールス信号の送受信・翻訳アプリケーションです。
